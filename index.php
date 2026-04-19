@@ -96,13 +96,17 @@
         }
 
         .hero {
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            padding: 0 5%;
-            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-            margin-top: 0;
-        }
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    padding: 0 5%;
+    margin-top: 0;
+
+    background: url('images/0_0.webp');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
 
         .hero-content {
             max-width: 600px;
@@ -242,12 +246,7 @@
                 <?php endif; ?>
             </div>
         </div>
-        <div class="hero-image">
-            <!-- Using a solid color placeholder with an emoji since we lack an actual image -->
-            <div style="width: 100%; aspect-ratio: 4/3; background: linear-gradient(45deg, var(--primary), #60a5fa); border-radius: 20px; display: flex; align-items: center; justify-content: center; color: white; font-size: 5rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
-                🚗💨
-            </div>
-        </div>
+        
     </section>
 
     <section id="features" class="features">
