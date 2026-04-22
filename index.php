@@ -116,7 +116,7 @@
             font-size: 3.5rem;
             line-height: 1.2;
             margin-bottom: 1.5rem;
-            color: var(--dark);
+            color: #a6a8ab;
         }
 
         .hero h1 span {
@@ -125,7 +125,7 @@
 
         .hero p {
             font-size: 1.25rem;
-            color: #475569;
+            color: #e6e3e3;
             margin-bottom: 2.5rem;
             line-height: 1.6;
         }
