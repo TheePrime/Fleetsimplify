@@ -44,6 +44,17 @@
             margin-bottom: 2rem;
         }
 
+        .brand-logo {
+            margin-bottom: 0.75rem;
+        }
+
+        .brand-logo img {
+            height: 72px;
+            max-width: 240px;
+            width: auto;
+            display: inline-block;
+        }
+
         .auth-header h1 {
             font-size: 1.75rem;
             margin: 0 0 0.5rem 0;
@@ -195,6 +206,7 @@
 
 <div class="auth-container">
     <div class="auth-header">
+        <div class="brand-logo"><img src="Images/logo.png" alt="FleetSimplify logo"></div>
         <h1>Create an Account</h1>
         <p>Join Roadside Assistance</p>
     </div>
@@ -215,7 +227,7 @@
         <div class="role-btn" onclick="toggleRole('mechanic')" id="btn-mechanic">Service Provider</div>
     </div>
 
-    <form action="auth/register_action.php" method="POST" id="registerForm">
+    <form action="../backend/auth/register_action.php" method="POST" id="registerForm">
         <input type="hidden" name="role" id="roleInput" value="user">
 
         <div class="form-group">

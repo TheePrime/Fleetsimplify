@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once '../config/db.php';
+require_once '../../backend/config/db.php';
 
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'mechanic') {
     header("Location: ../login.php");
@@ -42,7 +42,7 @@ if (count($feedbacks) > 0) {
     <style>
         body { font-family: 'Inter', sans-serif; background: #f8fafc; margin:0; padding:0; color: #0f172a; }
         .navbar { background-color: white; padding: 1rem 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
-        .navbar h2 { margin: 0; color: #2563eb; }
+        .navbar-brand img { height: 56px; max-width: 190px; width: auto; display: block; }
         .navbar a { text-decoration: none; color: #ef4444; font-weight: 600; }
         
         .container { max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
@@ -60,11 +60,11 @@ if (count($feedbacks) > 0) {
 </head>
 <body>
     <div class="navbar">
-        <h2>Customer Feedback</h2>
+        <div class="navbar-brand"><img src="../Images/logo.png" alt="FleetSimplify logo"></div>
         <div style="display: flex; gap: 1rem; align-items: center;">
             <a href="dashboard.php" style="color: #2563eb;">Back to Dashboard</a>
             <span>|</span>
-            <a href="../logout.php">Logout</a>
+            <a href="../../backend/logout.php">Logout</a>
         </div>
     </div>
 

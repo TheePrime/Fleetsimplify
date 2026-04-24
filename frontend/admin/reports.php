@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once '../config/db.php';
+require_once '../../backend/config/db.php';
 
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
     header("Location: ../login.php");
@@ -257,14 +257,12 @@ function jv(array $a): string { return json_encode(array_values($a)); }
             z-index:100; box-shadow:4px 0 16px rgba(0,0,0,.15);
         }
         .sidebar-logo {
-            display:flex; align-items:center; gap:10px;
-            padding:1.4rem 1.5rem;
-            font-size:1.2rem; font-weight:700; color:var(--orange);
+            display:flex; align-items:center; justify-content:center;
+            padding:1rem 1.5rem;
             border-bottom:1px solid rgba(255,255,255,.1);
             text-decoration:none;
         }
-        .sidebar-logo span { font-size:1.5rem; }
-        .sidebar-logo small { font-size:.65rem; color:rgba(255,255,255,.4); display:block; line-height:1; font-weight:400; }
+        .sidebar-logo img { height:48px; max-width:170px; width:auto; display:block; }
         .sidebar-nav { flex:1; padding:1rem 0; overflow-y:auto; }
         .nav-section { font-size:.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em;
             color:rgba(255,255,255,.3); padding:1rem 1.5rem .4rem; }
@@ -421,8 +419,7 @@ function jv(array $a): string { return json_encode(array_values($a)); }
 <!-- ═══════════════════ SIDEBAR ═══════════════════ -->
 <aside class="sidebar">
     <a href="dashboard.php" class="sidebar-logo">
-        <span>🛡️</span>
-        <div>Nyamato <small>Admin Panel</small></div>
+        <img src="../Images/logo.png" alt="FleetSimplify logo">
     </a>
     <nav class="sidebar-nav">
         <div class="nav-section">Main</div>
@@ -450,7 +447,7 @@ function jv(array $a): string { return json_encode(array_values($a)); }
         </a>
     </nav>
     <div class="sidebar-bottom">
-        <a href="../logout.php" class="nav-item" style="color:#f87171;">
+        <a href="../../backend/logout.php" class="nav-item" style="color:#f87171;">
             <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
             Logout
         </a>

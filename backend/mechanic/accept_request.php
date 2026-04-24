@@ -4,7 +4,7 @@ require_once '../config/db.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'mechanic') {
-        header("Location: ../login.php");
+        header("Location: ../../frontend/login.php");
         exit();
     }
 
@@ -19,7 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         if(!$mechanic) {
             $_SESSION['error'] = "Mechanic profile not found.";
-            header("Location: dashboard.php");
+            header("Location: ../../frontend/user/dashboard.php");
             exit();
         }
 
@@ -43,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['error'] = "This request is no longer available.";
         }
         
-        header("Location: dashboard.php");
+        header("Location: ../../frontend/mechanic/dashboard.php");
         exit();
 
     } catch (PDOException $e) {
@@ -51,11 +51,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo->rollBack();
         }
         $_SESSION['error'] = "Database Error: " . $e->getMessage();
-        header("Location: dashboard.php");
+        header("Location: ../../frontend/mechanic/dashboard.php");
         exit();
     }
 } else {
-    header("Location: dashboard.php");
+    header("Location: ../../frontend/mechanic/dashboard.php");
     exit();
 }
 ?>

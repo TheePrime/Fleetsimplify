@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once '../config/db.php';
+require_once '../../backend/config/db.php';
 
 if (!isset($_SESSION['user_id'])) {
     header("Location: ../login.php");
@@ -107,7 +107,7 @@ if (!$is_authorized) {
         let lastMsgCount = 0;
 
         function fetchMessages() {
-            fetch(`fetch_messages.php?request_id=${reqId}`)
+            fetch(`../../backend/chat/fetch_messages.php?request_id=${reqId}`)
             .then(res => res.json())
             .then(data => {
                 if(data.status === 'success') {
@@ -144,7 +144,7 @@ if (!$is_authorized) {
             // disable input during send
             sendBtn.disabled = true;
 
-            fetch("send_message.php", {
+            fetch("../../backend/chat/send_message.php", {
                 method: "POST",
                 headers: { "Content-Type": "application/x-www-form-urlencoded" },
                 body: new URLSearchParams({ request_id: reqId, message: msg })

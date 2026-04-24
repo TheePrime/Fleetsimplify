@@ -43,6 +43,17 @@
             margin-bottom: 2rem;
         }
 
+        .brand-logo {
+            margin-bottom: 0.75rem;
+        }
+
+        .brand-logo img {
+            height: 72px;
+            max-width: 240px;
+            width: auto;
+            display: inline-block;
+        }
+
         .auth-header h1 {
             font-size: 1.75rem;
             margin: 0 0 0.5rem 0;
@@ -150,6 +161,7 @@
 
 <div class="auth-container">
     <div class="auth-header">
+        <div class="brand-logo"><img src="Images/logo.png" alt="FleetSimplify logo"></div>
         <h1>Welcome Back</h1>
         <p>Log in to Roadside Assistance</p>
     </div>
@@ -165,7 +177,7 @@
     }
     ?>
 
-    <form action="auth/login_action.php" method="POST">
+    <form action="../backend/auth/login_action.php" method="POST">
         <div class="form-group">
             <label for="email">Email Address</label>
             <input type="email" id="email" name="email" required placeholder="john@example.com">

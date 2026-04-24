@@ -5,7 +5,7 @@ require_once '../config/db.php';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Auth check
     if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'user') {
-        header("Location: ../login.php");
+        header("Location: ../../frontend/login.php");
         exit();
     }
 
@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (empty($vehicle_type) || empty($location_address) || empty($problem_description)) {
         $_SESSION['error'] = "Please fill in all details.";
-        header("Location: dashboard.php");
+        header("Location: ../../frontend/user/dashboard.php");
         exit();
     }
 
@@ -44,16 +44,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ]);
 
         $_SESSION['success'] = "Breakdown request submitted successfully. We are notifying nearby mechanics.";
-        header("Location: dashboard.php");
+        header("Location: ../../frontend/user/dashboard.php");
         exit();
 
     } catch (PDOException $e) {
         $_SESSION['error'] = "Database Error: " . $e->getMessage();
-        header("Location: dashboard.php");
+        header("Location: ../../frontend/user/dashboard.php");
         exit();
     }
 } else {
-    header("Location: dashboard.php");
+    header("Location: ../../frontend/user/dashboard.php");
     exit();
 }
 ?>

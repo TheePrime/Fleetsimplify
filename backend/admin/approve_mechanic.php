@@ -4,7 +4,7 @@ require_once '../config/db.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
-        header("Location: ../login.php");
+        header("Location: ../../frontend/login.php");
         exit();
     }
 
@@ -18,16 +18,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->execute([$status, $mechanic_id]);
 
         $_SESSION['success'] = "Mechanic status updated to " . $status;
-        header("Location: dashboard.php");
+        header("Location: ../../frontend/admin/dashboard.php");
         exit();
 
     } catch (PDOException $e) {
         $_SESSION['error'] = "Database Error: " . $e->getMessage();
-        header("Location: dashboard.php");
+        header("Location: ../../frontend/admin/dashboard.php");
         exit();
     }
 } else {
-    header("Location: dashboard.php");
+    header("Location: ../../frontend/admin/dashboard.php");
     exit();
 }
 ?>

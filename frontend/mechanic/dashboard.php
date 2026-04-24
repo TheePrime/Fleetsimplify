@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once '../config/db.php';
+require_once '../../backend/config/db.php';
 
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'mechanic') {
     header("Location: ../login.php");
@@ -105,15 +105,12 @@ $activeTab = $_GET['tab'] ?? 'requests';
         .sidebar-logo {
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 1.4rem 1.5rem;
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: var(--orange);
+            justify-content: center;
+            padding: 1rem 1.5rem;
             border-bottom: 1px solid var(--border);
             text-decoration: none;
         }
-        .sidebar-logo span { font-size: 1.6rem; }
+        .sidebar-logo img { height: 48px; max-width: 170px; width: auto; display: block; }
 
         .sidebar-nav {
             flex: 1;
@@ -570,7 +567,7 @@ $activeTab = $_GET['tab'] ?? 'requests';
 <!-- ===== SIDEBAR ===== -->
 <aside class="sidebar" id="sidebar">
     <a href="dashboard.php" class="sidebar-logo">
-        <span>🔧</span> Nyamato
+        <img src="../Images/logo.png" alt="FleetSimplify logo">
     </a>
 
     <nav class="sidebar-nav">
@@ -605,7 +602,7 @@ $activeTab = $_GET['tab'] ?? 'requests';
     </nav>
 
     <div class="sidebar-bottom">
-        <a href="../logout.php" class="nav-item" style="color: #ef4444;">
+        <a href="../../backend/logout.php" class="nav-item" style="color: #ef4444;">
             <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
             Logout
         </a>
@@ -727,7 +724,7 @@ $activeTab = $_GET['tab'] ?? 'requests';
                             <div class="request-detail">📍 <?= htmlspecialchars($req['location_address']) ?></div>
                             <div class="request-detail">🔧 <?= htmlspecialchars($req['problem_description']) ?></div>
                             <div class="request-actions">
-                                <form action="accept_request.php" method="POST" style="margin:0;">
+                                <form action="../../backend/mechanic/accept_request.php" method="POST" style="margin:0;">
                                     <input type="hidden" name="request_id" value="<?= $req['id'] ?>">
                                     <button type="submit" class="btn btn-success">✅ Accept Job</button>
                                 </form>

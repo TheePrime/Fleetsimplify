@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once '../config/db.php';
+require_once '../../backend/config/db.php';
 
 // Protect route
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'user') {
@@ -91,15 +91,12 @@ $memberSince = isset($userData['created_at']) ? date('M Y', strtotime($userData[
         .sidebar-logo {
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 1.4rem 1.5rem;
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: var(--orange);
+            justify-content: center;
+            padding: 1rem 1.5rem;
             border-bottom: 1px solid var(--border);
             text-decoration: none;
         }
-        .sidebar-logo span { font-size: 1.6rem; }
+        .sidebar-logo img { height: 48px; max-width: 170px; width: auto; display: block; }
 
         .sidebar-nav {
             flex: 1;
@@ -562,7 +559,7 @@ $memberSince = isset($userData['created_at']) ? date('M Y', strtotime($userData[
 <!-- ===== SIDEBAR ===== -->
 <aside class="sidebar" id="sidebar">
     <a href="dashboard.php" class="sidebar-logo">
-        <span>🚛</span> Nyamato
+        <img src="../Images/logo.png" alt="FleetSimplify logo">
     </a>
 
     <nav class="sidebar-nav">
@@ -592,7 +589,7 @@ $memberSince = isset($userData['created_at']) ? date('M Y', strtotime($userData[
     </nav>
 
     <div class="sidebar-bottom">
-        <a href="../logout.php" class="nav-item" style="color: #ef4444;">
+        <a href="../../backend/logout.php" class="nav-item" style="color: #ef4444;">
             <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
             Logout
         </a>
@@ -688,7 +685,7 @@ $memberSince = isset($userData['created_at']) ? date('M Y', strtotime($userData[
                 }
                 ?>
 
-                <form action="request_action.php" method="POST" id="requestForm">
+                <form action="../../backend/user/request_action.php" method="POST" id="requestForm">
                     <input type="hidden" name="location_lat" id="location_lat">
                     <input type="hidden" name="location_lng" id="location_lng">
 

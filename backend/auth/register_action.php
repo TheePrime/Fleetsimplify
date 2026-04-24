@@ -12,7 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Basic Validation
     if (empty($name) || empty($email) || empty($password)) {
         $_SESSION['error'] = "Please fill in all required fields.";
-        header("Location: ../register.php");
+        header("Location: ../../frontend/register.php");
         exit();
     }
 
@@ -22,7 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->execute([$email]);
         if ($stmt->fetch()) {
             $_SESSION['error'] = "Email already registered.";
-            header("Location: ../register.php");
+            header("Location: ../../frontend/register.php");
             exit();
         }
 
@@ -46,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (empty($service_location) || empty($services_offered) || empty($license_number)) {
                 $pdo->rollBack();
                 $_SESSION['error'] = "Mechanic details are required.";
-                header("Location: ../register.php");
+                header("Location: ../../frontend/register.php");
                 exit();
             }
 
@@ -56,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($stmt->fetch()) {
                 $pdo->rollBack();
                 $_SESSION['error'] = "License number already registered.";
-                header("Location: ../register.php");
+                header("Location: ../../frontend/register.php");
                 exit();
             }
 
@@ -72,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['success'] = "Registration successful! Your mechanic account is pending administrator approval.";
         }
         
-        header("Location: ../login.php");
+        header("Location: ../../frontend/login.php");
         exit();
 
     } catch (PDOException $e) {
@@ -80,11 +80,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo->rollBack();
         }
         $_SESSION['error'] = "Registration failed: " . $e->getMessage();
-        header("Location: ../register.php");
+        header("Location: ../../frontend/register.php");
         exit();
     }
 } else {
-    header("Location: ../register.php");
+    header("Location: ../../frontend/register.php");
     exit();
 }
 ?>

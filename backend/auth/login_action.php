@@ -8,7 +8,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (empty($email) || empty($password)) {
         $_SESSION['error'] = "Please fill in all fields.";
-        header("Location: ../login.php");
+        header("Location: ../../frontend/login.php");
         exit();
     }
 
@@ -27,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 if ($mechanic && $mechanic['approval_status'] !== 'APPROVED') {
                     $_SESSION['error'] = "Account pending approval or rejected. Contact Admin.";
-                    header("Location: ../login.php");
+                    header("Location: ../../frontend/login.php");
                     exit();
                 }
             }
@@ -39,26 +39,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             // Redirect based on role
             if ($user['role'] === 'admin') {
-                header("Location: ../admin/dashboard.php");
+                header("Location: ../../frontend/admin/dashboard.php");
             } elseif ($user['role'] === 'mechanic') {
-                header("Location: ../mechanic/dashboard.php");
+                header("Location: ../../frontend/mechanic/dashboard.php");
             } else {
-                header("Location: ../user/dashboard.php");
+                header("Location: ../../frontend/user/dashboard.php");
             }
             exit();
 
         } else {
             $_SESSION['error'] = "Invalid email or password.";
-            header("Location: ../login.php");
+            header("Location: ../../frontend/login.php");
             exit();
         }
     } catch (PDOException $e) {
         $_SESSION['error'] = "Login failed: " . $e->getMessage();
-        header("Location: ../login.php");
+        header("Location: ../../frontend/login.php");
         exit();
     }
 } else {
-    header("Location: ../login.php");
+    header("Location: ../../frontend/login.php");
     exit();
 }
 ?>

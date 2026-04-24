@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once '../config/db.php';
+require_once '../../backend/config/db.php';
 
 // Protect route
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
@@ -164,16 +164,12 @@ $activeTab = $_GET['tab'] ?? 'overview';
         .sidebar-logo {
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 1.4rem 1.5rem;
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: var(--orange);
+            justify-content: center;
+            padding: 1rem 1.5rem;
             border-bottom: 1px solid rgba(255,255,255,0.1);
             text-decoration: none;
         }
-        .sidebar-logo span { font-size: 1.5rem; }
-        .sidebar-logo small { font-size: 0.65rem; color: rgba(255,255,255,0.4); display: block; line-height: 1; font-weight: 400; }
+        .sidebar-logo img { height: 48px; max-width: 170px; width: auto; display: block; }
 
         .sidebar-nav { flex: 1; padding: 1rem 0; overflow-y: auto; }
 
@@ -529,8 +525,7 @@ $activeTab = $_GET['tab'] ?? 'overview';
 <!-- ===== SIDEBAR ===== -->
 <aside class="sidebar" id="sidebar">
     <a href="dashboard.php" class="sidebar-logo">
-        <span>🛡️</span>
-        <div>Nyamato <small>Admin Panel</small></div>
+        <img src="../Images/logo.png" alt="FleetSimplify logo">
     </a>
 
     <nav class="sidebar-nav">
@@ -563,7 +558,7 @@ $activeTab = $_GET['tab'] ?? 'overview';
     </nav>
 
     <div class="sidebar-bottom">
-        <a href="../logout.php" class="nav-item" style="color: #f87171;">
+        <a href="../../backend/logout.php" class="nav-item" style="color: #f87171;">
             <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
             Logout
         </a>
@@ -696,7 +691,7 @@ $activeTab = $_GET['tab'] ?? 'overview';
                                 <div class="mech-sub">📍 <?= htmlspecialchars($m['service_location']) ?> · <?= htmlspecialchars($m['license_number']) ?></div>
                             </div>
                             <div class="mech-actions">
-                                <form action="approve_mechanic.php" method="POST" style="margin:0;display:inline;">
+                                <form action="../../backend/admin/approve_mechanic.php" method="POST" style="margin:0;display:inline;">
                                     <input type="hidden" name="mechanic_id" value="<?= $m['id'] ?>">
                                     <button type="submit" name="action" value="approve" class="btn btn-approve btn-sm">✅ Approve</button>
                                     <button type="submit" name="action" value="reject"  class="btn btn-reject  btn-sm">✗ Reject</button>
@@ -883,7 +878,7 @@ $activeTab = $_GET['tab'] ?? 'overview';
                         <td><?= htmlspecialchars($m['license_number']) ?></td>
                         <td style="font-size:0.78rem;"><?= htmlspecialchars(substr($m['services_offered'],0,40)) ?></td>
                         <td>
-                            <form action="approve_mechanic.php" method="POST" style="margin:0;display:flex;gap:0.4rem;">
+                            <form action="../../backend/admin/approve_mechanic.php" method="POST" style="margin:0;display:flex;gap:0.4rem;">
                                 <input type="hidden" name="mechanic_id" value="<?= $m['id'] ?>">
                                 <button type="submit" name="action" value="approve" class="btn btn-approve btn-sm">✅ Approve</button>
                                 <button type="submit" name="action" value="reject"  class="btn btn-reject  btn-sm">✗ Reject</button>
