@@ -763,6 +763,7 @@ $activeTab = $_GET['tab'] ?? 'requests';
                         <div class="request-detail">📍 <?= htmlspecialchars($task['location_address']) ?></div>
                         <div class="request-actions">
                             <a href="dashboard.php?tab=tasks" class="btn btn-sm btn-info" style="text-decoration:none;">Manage →</a>
+                            <a href="track.php?id=<?= $task['id'] ?>" class="btn btn-sm btn-orange" style="text-decoration:none;">📍 Track Location</a>
                             <a href="../chat/chat_ui.php?request_id=<?= $task['id'] ?>" class="btn btn-sm btn-gray" style="text-decoration:none;">💬 Chat</a>
                         </div>
                         <div class="request-time"><?= date('M d, Y h:i A', strtotime($task['created_at'])) ?></div>
@@ -813,6 +814,7 @@ $activeTab = $_GET['tab'] ?? 'requests';
                                         <option value="Completed">Completed</option>
                                     </select>
                                     <button type="submit" class="btn btn-info">Update Status</button>
+                                    <a href="track.php?id=<?= $task['id'] ?>" class="btn btn-orange" style="text-decoration:none;">📍 Track / Share Location</a>
                                     <a href="../chat/chat_ui.php?request_id=<?= $task['id'] ?>" class="btn btn-gray" style="text-decoration:none;">💬 Chat</a>
                                 </form>
                             </div>
