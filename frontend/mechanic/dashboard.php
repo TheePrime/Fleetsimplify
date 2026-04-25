@@ -595,7 +595,7 @@ $activeTab = $_GET['tab'] ?? 'requests';
             <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
             Business Profile
         </a>
-        <a href="../chat/chat_ui.php" class="nav-item">
+        <a href="../chat/index.php" class="nav-item">
             <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
             Messages
         </a>

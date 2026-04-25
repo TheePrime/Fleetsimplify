@@ -64,13 +64,12 @@ if (!$is_authorized) {
         
         .message { padding: 10px 15px; border-radius: 12px; max-width: 75%; line-height: 1.5; font-size: 0.95rem; position: relative; }
         
-        /* According to prompt: Left = User, Right = Mechanic */
-        .msg-user { align-self: flex-start; background: #e2e8f0; color: #0f172a; border-bottom-left-radius: 0; }
-        .msg-mechanic { align-self: flex-end; background: #3b82f6; color: white; border-bottom-right-radius: 0; }
+        .sent { align-self: flex-end; background-color: #2563eb; color: white; border-bottom-right-radius: 0; }
+        .received { align-self: flex-start; background-color: #e5e7eb; color: black; border-bottom-left-radius: 0; }
         
         .msg-sender { font-size: 0.75rem; font-weight: bold; margin-bottom: 4px; display:block; }
-        .msg-user .msg-sender { color: #475569; }
-        .msg-mechanic .msg-sender { color: #bfdbfe; }
+        .sent .msg-sender { color: #bfdbfe; }
+        .received .msg-sender { color: #475569; }
         
         .msg-time { font-size: 0.7rem; margin-top: 5px; opacity: 0.8; display:block; text-align:right;}
         
@@ -86,7 +85,7 @@ if (!$is_authorized) {
     <div class="chat-container">
         <div class="chat-header">
             <h3>Order #<?php echo htmlspecialchars($request_id); ?> Chat</h3>
-            <a href="javascript:history.back()" class="back-btn">Go Back</a>
+            <a href="index.php" class="back-btn">Go Back</a>
         </div>
         
         <div class="chat-box" id="chat-box">
@@ -125,11 +124,10 @@ if (!$is_authorized) {
             chatBox.innerHTML = '';
             messages.forEach(msg => {
                 const div = document.createElement('div');
-                // Adhere to Prompt: Left = user, Right = mechanic
-                div.className = 'message ' + (msg.sender_role === 'mechanic' ? 'msg-mechanic' : 'msg-user');
+                div.className = 'message ' + (msg.is_mine ? 'sent' : 'received');
                 
                 div.innerHTML = `
-                    <span class="msg-sender">${msg.is_mine ? 'You' : msg.sender} (${msg.sender_role})</span>
+                    <span class="msg-sender">${msg.is_mine ? 'You' : msg.sender}</span>
                     ${msg.message}
                     <span class="msg-time">${msg.time}</span>
                 `;
