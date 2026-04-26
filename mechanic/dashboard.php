@@ -49,6 +49,8 @@ $myTasks = $stmtTasks->fetchAll();
 $activeTasksCount    = count(array_filter($myTasks, fn($t) => !in_array($t['status'], ['Completed', 'Cancelled'])));
 $completedTasksCount = count(array_filter($myTasks, fn($t) => $t['status'] === 'Completed'));
 $newRequestsCount    = count($pendingRequests);
+$paidTasksCount = count(array_filter($myTasks, fn($t) => (($t['payment_status'] ?? 'Unpaid') === 'Paid')));
+$nearbyNotificationsOnly = env_value('NOTIFICATION_NEARBY_ONLY', '0') === '1';
 
 // Active tab
 $activeTab = $_GET['tab'] ?? 'requests';
@@ -537,6 +539,37 @@ $activeTab = $_GET['tab'] ?? 'requests';
         .alert-error   { background: #fef2f2; color: #dc2626; border: 1px solid #fca5a5; }
         .alert-warning { background: #fffbeb; color: #d97706; border: 1px solid #fcd34d; }
 
+        .notif-stack {
+            position: fixed;
+            right: 1rem;
+            bottom: 1rem;
+            z-index: 999;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            max-width: 320px;
+        }
+
+        .notif-toast {
+            background: var(--white);
+            border-left: 4px solid var(--orange);
+            box-shadow: 0 10px 22px rgba(15, 23, 42, 0.12);
+            border-radius: 10px;
+            padding: 0.7rem 0.85rem;
+            font-size: 0.82rem;
+            color: var(--text);
+            animation: slideIn 0.22s ease-out;
+        }
+
+        .notif-toast.success { border-left-color: #10b981; }
+        .notif-toast.info { border-left-color: #0ea5e9; }
+        .notif-toast.warn { border-left-color: #f59e0b; }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         /* ===== EMPTY STATE ===== */
         .empty-state {
             text-align: center;
@@ -616,9 +649,7 @@ $activeTab = $_GET['tab'] ?? 'requests';
     <div class="topbar">
         <span class="topbar-title">Mechanic Dashboard</span>
         <div class="topbar-right">
-            <?php if($newRequestsCount > 0): ?>
-                <span class="badge-notif"><?= $newRequestsCount ?> new</span>
-            <?php endif; ?>
+            <span class="badge-notif" id="topNewReqBadge" <?= $newRequestsCount > 0 ? '' : 'style="display:none;"' ?>><?= $newRequestsCount ?> new</span>
             <div class="avatar-sm"><?= strtoupper(substr($user_name, 0, 2)) ?></div>
         </div>
     </div>
@@ -669,15 +700,15 @@ $activeTab = $_GET['tab'] ?? 'requests';
             <div class="stat-card">
                 <div class="stat-icon teal">⚙️</div>
                 <div>
-                    <div class="stat-num"><?= $activeTasksCount ?></div>
+                    <div class="stat-num" id="statActiveTasks"><?= $activeTasksCount ?></div>
                     <div class="stat-label">Active Tasks</div>
                 </div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon navy">✅</div>
                 <div>
-                    <div class="stat-num"><?= $completedTasksCount ?></div>
-                    <div class="stat-label">Completed</div>
+                    <div class="stat-num" id="statPaidTasks"><?= $paidTasksCount ?></div>
+                    <div class="stat-label">Paid Jobs</div>
                 </div>
             </div>
         </div>
@@ -838,10 +869,34 @@ $activeTab = $_GET['tab'] ?? 'requests';
     </div><!-- /content-area -->
 </main>
 
+<div class="notif-stack" id="notifStack" aria-live="polite"></div>
+
 <script>
     // ===== Ringtone / Notification Polling =====
     let lastCount = <?= $newRequestsCount ?>;
     const approvalStatus = "<?= $approval_status ?>";
+    const nearbyOnly = <?= $nearbyNotificationsOnly ? 'true' : 'false' ?>;
+    const activeTab = "<?= $activeTab ?>";
+    let hasPolledOnce = false;
+    let previousTaskState = new Map();
+    let previousPaidCount = <?= $paidTasksCount ?>;
+    let approvalChangedNotified = false;
+
+    function notify(message, type = 'info') {
+        const stack = document.getElementById('notifStack');
+        if (!stack) return;
+
+        const toast = document.createElement('div');
+        toast.className = `notif-toast ${type}`;
+        toast.textContent = message;
+        stack.appendChild(toast);
+
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(8px)';
+            setTimeout(() => toast.remove(), 220);
+        }, 4200);
+    }
 
     function playRingtone() {
         const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -860,25 +915,90 @@ $activeTab = $_GET['tab'] ?? 'requests';
 
     function checkNewRequests() {
         if (approvalStatus !== 'APPROVED') return;
-        fetch('api_pending_requests.php')
+        const url = '../backend/mechanic/api_pending_requests.php?nearby=' + (nearbyOnly ? '1' : '0');
+        fetch(url)
             .then(res => res.json())
             .then(data => {
+                if (data.approval_status && data.approval_status !== 'APPROVED') {
+                    if (!approvalChangedNotified) {
+                        notify('Your account approval status changed. New alerts are paused.', 'warn');
+                        approvalChangedNotified = true;
+                    }
+                    return;
+                }
+
                 const pill  = document.getElementById('reqCount');
                 const pill2 = document.getElementById('reqCount2');
                 const stat  = document.getElementById('statNewReqs');
+                const topBadge = document.getElementById('topNewReqBadge');
+                const statActiveTasks = document.getElementById('statActiveTasks');
+                const statPaidTasks = document.getElementById('statPaidTasks');
+
+                const updates = Array.isArray(data.task_updates) ? data.task_updates : [];
+                const currentTaskState = new Map();
+                updates.forEach(task => {
+                    currentTaskState.set(String(task.id), {
+                        status: task.status,
+                        payment_status: task.payment_status || 'Unpaid'
+                    });
+                });
+
+                if (typeof data.active_task_count === 'number' && statActiveTasks) {
+                    statActiveTasks.innerText = data.active_task_count;
+                }
+
+                if (typeof data.paid_task_count === 'number' && statPaidTasks) {
+                    statPaidTasks.innerText = data.paid_task_count;
+                }
+
+                if (!hasPolledOnce) {
+                    previousTaskState = currentTaskState;
+                    previousPaidCount = data.paid_task_count || previousPaidCount;
+                    hasPolledOnce = true;
+                } else {
+                    currentTaskState.forEach((state, id) => {
+                        const previous = previousTaskState.get(id);
+                        if (!previous) {
+                            return;
+                        }
+
+                        if (previous.status !== state.status) {
+                            notify(`Task #${id} updated: ${previous.status} -> ${state.status}`, 'info');
+                        }
+
+                        if (previous.payment_status !== state.payment_status && state.payment_status === 'Paid') {
+                            notify(`Payment received for Task #${id}.`, 'success');
+                        }
+                    });
+
+                    if ((data.paid_task_count || 0) > previousPaidCount) {
+                        playRingtone();
+                    }
+
+                    previousTaskState = currentTaskState;
+                    previousPaidCount = data.paid_task_count || previousPaidCount;
+                }
 
                 if (data.count > lastCount) {
                     playRingtone();
+                    notify(`You have ${data.count - lastCount} new request(s).`, 'warn');
                     lastCount = data.count;
                     if (pill)  { pill.innerText  = data.count; pill.style.display  = ''; }
                     if (pill2) { pill2.innerText = data.count; }
                     if (stat)  { stat.innerText  = data.count; }
-                    setTimeout(() => window.location.reload(), 1500);
+                    if (topBadge) { topBadge.innerText = `${data.count} new`; topBadge.style.display = ''; }
+                    if (activeTab === 'requests') {
+                        setTimeout(() => window.location.reload(), 1500);
+                    }
                 } else {
                     lastCount = data.count;
                     if (pill)  { pill.innerText  = data.count; if(data.count == 0) pill.style.display = 'none'; }
                     if (pill2) { pill2.innerText = data.count; }
                     if (stat)  { stat.innerText  = data.count; }
+                    if (topBadge) {
+                        topBadge.innerText = `${data.count} new`;
+                        topBadge.style.display = data.count > 0 ? '' : 'none';
+                    }
                 }
             })
             .catch(err => console.error("Polling error:", err));
