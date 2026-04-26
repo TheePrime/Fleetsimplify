@@ -1,51 +1,43 @@
 <?php
 session_start();
-require_once '../../backend/config/db.php';
+require_once '../config/db.php';
 
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'user') {
-    header("Location: ../login.php");
+    header('Location: ../login.php');
     exit();
 }
 
 $request_id = $_GET['id'] ?? null;
 $user_id = $_SESSION['user_id'];
-$user_email = $_SESSION['user_email'] ?? 'driver@example.com'; // We need email for Paystack
+$user_email = $_SESSION['user_email'] ?? 'driver@example.com';
 
 if (!$request_id) {
-    echo "Invalid Request ID";
+    echo 'Invalid Request ID';
     exit();
 }
 
-// Fetch request
-$stmt = $pdo->prepare("
-    SELECT r.*, u.email as driver_email, m.name as mechanic_name
-    FROM requests r
-    JOIN users u ON r.driver_id = u.id
-    LEFT JOIN mechanics mech ON r.mechanic_id = mech.id
-    LEFT JOIN users m ON mech.user_id = m.id
-    WHERE r.id = ? AND r.driver_id = ?
-");
+$stmt = $pdo->prepare("\n    SELECT r.*, u.email AS driver_email, m.name AS mechanic_name\n    FROM requests r\n    JOIN users u ON r.driver_id = u.id\n    LEFT JOIN mechanics mech ON r.mechanic_id = mech.id\n    LEFT JOIN users m ON mech.user_id = m.id\n    WHERE r.id = ? AND r.driver_id = ?\n");
 $stmt->execute([$request_id, $user_id]);
 $requestData = $stmt->fetch();
 
 if (!$requestData) {
-    echo "Request not found.";
+    echo 'Request not found.';
     exit();
 }
 
 if ($requestData['payment_status'] === 'Paid') {
-    header("Location: dashboard.php?tab=requests");
+    header('Location: dashboard.php?tab=requests');
     exit();
 }
 
 if ($requestData['status'] !== 'Completed') {
-    echo "This request is not ready for payment yet.";
+    echo 'This request is not ready for payment yet.';
     exit();
 }
 
 $agreedAmount = isset($requestData['agreed_amount']) ? (float)$requestData['agreed_amount'] : 0;
 if ($agreedAmount <= 0) {
-    echo "Invoice amount has not been set by the mechanic yet.";
+    echo 'Invoice amount has not been set by the mechanic yet.';
     exit();
 }
 
@@ -75,15 +67,13 @@ $driver_email = $requestData['driver_email'];
         .btn:hover { background: #059669; }
         .btn-cancel { background: #94a3b8; margin-top: 1rem; }
         .btn-cancel:hover { background: #64748b; }
-        
         #loadingMsg { display: none; margin-top: 1rem; font-size: 0.85rem; color: #0ea5e9; font-weight: 500; }
     </style>
 </head>
 <body>
-
 <div class="card">
     <h2 style="margin-top:0;">Secure Payment</h2>
-    
+
     <div class="info">
         <strong>Service:</strong> Roadside Assistance<br>
         <strong>Mechanic:</strong> <?= htmlspecialchars($requestData['mechanic_name'] ?? 'Unknown') ?><br>
@@ -119,7 +109,7 @@ function payWithPaystack() {
     }
 
     const amountKobo = Math.round(parseFloat(agreedAmount) * 100);
-    
+
     let handler = PaystackPop.setup({
         key: paystackPublicKey,
         email: '<?= htmlspecialchars($driver_email) ?>',
@@ -130,11 +120,10 @@ function payWithPaystack() {
             alert('Payment window closed.');
         },
         callback: function(response) {
-            // Payment completed! Verify on backend.
             loadingMsg.style.display = 'block';
             paymentForm.style.display = 'none';
 
-            fetch('../../backend/api/verify_paystack.php', {
+            fetch('../backend/api/verify_paystack.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -163,6 +152,5 @@ function payWithPaystack() {
     handler.openIframe();
 }
 </script>
-
 </body>
 </html>

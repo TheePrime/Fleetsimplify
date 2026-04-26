@@ -1,20 +1,19 @@
 <?php
 session_start();
-require_once '../../backend/config/db.php';
+require_once '../config/db.php';
 
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'user') {
-    header("Location: ../login.php");
+    header('Location: ../login.php');
     exit();
 }
 
 $user_id = $_SESSION['user_id'];
 $user_name = $_SESSION['user_name'];
 
-$stmtInvoices = $pdo->prepare("\n    SELECT r.id, r.vehicle_type, r.problem_description, r.status, r.agreed_amount, r.payment_status, r.created_at,\n           mech.business_name, m.name AS mechanic_name\n    FROM requests r\n    LEFT JOIN mechanics mech ON r.mechanic_id = mech.id\n    LEFT JOIN users m ON mech.user_id = m.id\n    WHERE r.driver_id = ?\n    ORDER BY r.created_at DESC\n");
+$stmtInvoices = $pdo->prepare("\n    SELECT r.id, r.vehicle_type, r.problem_description, r.status, r.agreed_amount, r.payment_status, r.created_at,\n           m.name AS mechanic_name, m.phone AS mechanic_phone, mech.business_name\n    FROM requests r\n    LEFT JOIN mechanics mech ON r.mechanic_id = mech.id\n    LEFT JOIN users m ON mech.user_id = m.id\n    WHERE r.driver_id = ?\n    ORDER BY r.created_at DESC\n");
 $stmtInvoices->execute([$user_id]);
 $requestInvoices = $stmtInvoices->fetchAll();
 $completedInvoices = array_values(array_filter($requestInvoices, fn($req) => $req['status'] === 'Completed'));
-$unpaidInvoices = array_values(array_filter($completedInvoices, fn($req) => $req['payment_status'] === 'Unpaid'));
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -43,107 +42,181 @@ $unpaidInvoices = array_values(array_filter($completedInvoices, fn($req) => $req
 
         body {
             font-family: 'Poppins', 'Inter', 'Roboto', sans-serif;
-            background: var(--bg); color: var(--text);
-            display: flex; min-height: 100vh;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            min-height: 100vh;
         }
 
-        /* SIDEBAR */
         .sidebar {
-            width: var(--sidebar-w); background: var(--white);
-            border-right: 1px solid var(--border); display: flex;
-            flex-direction: column; position: fixed; top: 0; left: 0;
-            height: 100vh; z-index: 100; box-shadow: 2px 0 8px rgba(0,0,0,0.04);
+            width: var(--sidebar-w);
+            background: var(--white);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            z-index: 100;
+            box-shadow: 2px 0 8px rgba(0,0,0,0.04);
         }
+
         .sidebar-logo {
-            display: flex; align-items: center; gap: 10px;
-            justify-content: center; padding: 1rem 1.5rem;
-            border-bottom: 1px solid var(--border); text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            justify-content: center;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            text-decoration: none;
         }
+
         .sidebar-logo img { height: 48px; max-width: 170px; width: auto; display: block; }
         .sidebar-nav { flex: 1; padding: 1rem 0; overflow-y: auto; }
+
         .nav-item {
-            display: flex; align-items: center; gap: 12px;
-            padding: 0.75rem 1.5rem; color: var(--muted); text-decoration: none;
-            font-size: 0.92rem; font-weight: 500; transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0.75rem 1.5rem;
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 0.92rem;
+            font-weight: 500;
+            transition: all 0.2s;
             border-left: 3px solid transparent;
         }
-        .nav-item:hover { background: var(--orange-lt); color: var(--orange); border-left-color: var(--orange); }
-        .nav-item.active { background: var(--orange-lt); color: var(--orange); border-left-color: var(--orange); font-weight: 600; }
-        .nav-item svg {
-            width: 18px; height: 18px; flex-shrink: 0;
-            stroke: currentColor; fill: none;
-            stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
-        }
-        .sidebar-bottom { padding: 1rem 0; border-top: 1px solid var(--border); }
 
-        /* MAIN */
+        .nav-item:hover {
+            background: var(--orange-lt);
+            color: var(--orange);
+            border-left-color: var(--orange);
+        }
+
+        .nav-item.active {
+            background: var(--orange-lt);
+            color: var(--orange);
+            border-left-color: var(--orange);
+            font-weight: 600;
+        }
+
+        .nav-item svg {
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 1.8;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .sidebar-bottom { padding: 1rem 0; border-top: 1px solid var(--border); }
         .main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; }
 
-        /* TOPBAR */
         .topbar {
-            background: var(--white); border-bottom: 1px solid var(--border);
-            padding: 0.85rem 2rem; display: flex; align-items: center;
-            justify-content: space-between; position: sticky; top: 0; z-index: 50;
-        }
-        .topbar-title { font-size: 1rem; font-weight: 600; }
-        .avatar-sm {
-            width: 36px; height: 36px; border-radius: 50%;
-            background: linear-gradient(135deg, var(--teal), var(--teal-dk));
-            display: flex; align-items: center; justify-content: center;
-            color: white; font-weight: 700; font-size: 0.85rem; text-transform: uppercase;
+            background: var(--white);
+            border-bottom: 1px solid var(--border);
+            padding: 0.85rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 50;
         }
 
-        /* PROFILE HEADER */
+        .topbar-title { font-size: 1rem; font-weight: 600; }
+        .avatar-sm {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--teal), var(--teal-dk));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+        }
+
         .profile-header {
-            background: var(--white); border-radius: 16px; overflow: hidden;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.07); margin: 1.5rem 2rem 0;
+            background: var(--white);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+            margin: 1.5rem 2rem 0;
         }
-        .profile-cover {
-            height: 160px;
-            background: linear-gradient(135deg, #0d9488 0%, #0891b2 50%, #1d4ed8 100%);
-        }
+
+        .profile-cover { height: 160px; background: linear-gradient(135deg, #0d9488 0%, #0891b2 50%, #1d4ed8 100%); }
+
         .profile-info-row {
-            display: flex; align-items: flex-end; gap: 1.25rem;
-            padding: 0 1.75rem 1.25rem; position: relative;
+            display: flex;
+            align-items: flex-end;
+            gap: 1.25rem;
+            padding: 0 1.75rem 1.25rem;
+            position: relative;
         }
+
         .profile-avatar {
-            width: 90px; height: 90px; border-radius: 50%;
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
             border: 4px solid var(--white);
             background: linear-gradient(135deg, var(--teal), var(--navy));
-            display: flex; align-items: center; justify-content: center;
-            font-size: 2rem; font-weight: 700; color: white; text-transform: uppercase;
-            margin-top: -45px; flex-shrink: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: 700;
+            color: white;
+            text-transform: uppercase;
+            margin-top: -45px;
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
+
         .profile-meta { flex: 1; padding-top: 0.5rem; }
         .profile-name { font-size: 1.25rem; font-weight: 700; }
-        .profile-sub  { font-size: 0.82rem; color: var(--muted); margin-top: 2px; }
+        .profile-sub { font-size: 0.82rem; color: var(--muted); margin-top: 2px; }
         .profile-badges { display: flex; gap: 0.6rem; margin-top: 0.5rem; flex-wrap: wrap; }
+
         .badge {
-            display: inline-flex; align-items: center; gap: 4px;
-            font-size: 0.75rem; font-weight: 600; padding: 4px 10px; border-radius: 9999px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 9999px;
         }
+
         .badge-teal { background: #ccfbf1; color: #0f766e; }
         .badge-orange { background: var(--orange-lt); color: var(--orange); }
 
-        /* TABS */
         .profile-tabs { display: flex; border-top: 1px solid var(--border); margin: 0 1.75rem; }
         .tab-btn {
-            padding: 0.85rem 1.25rem; font-size: 0.875rem; font-weight: 500;
-            color: var(--muted); background: none; border: none;
-            border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.2s;
-            text-decoration: none; display: inline-block; font-family: inherit;
+            padding: 0.85rem 1.25rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--muted);
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+            font-family: inherit;
         }
         .tab-btn:hover { color: var(--text); }
         .tab-btn.active { color: var(--text); border-bottom-color: var(--text); font-weight: 600; }
 
-        /* CONTENT */
         .content-area { padding: 1.5rem 2rem 2rem; }
-
         .page-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 1.25rem; }
-
-        .invoice-section {
-            margin-bottom: 2rem;
-        }
+        .invoice-section { margin-bottom: 2rem; }
 
         .section-head {
             display: flex;
@@ -153,16 +226,8 @@ $unpaidInvoices = array_values(array_filter($completedInvoices, fn($req) => $req
             margin-bottom: 1rem;
         }
 
-        .section-head h3 {
-            font-size: 1rem;
-            font-weight: 700;
-        }
-
-        .section-head p {
-            font-size: 0.82rem;
-            color: var(--muted);
-            margin-top: 0.25rem;
-        }
+        .section-head h3 { font-size: 1rem; font-weight: 700; }
+        .section-head p { font-size: 0.82rem; color: var(--muted); margin-top: 0.25rem; }
 
         .invoice-grid {
             display: grid;
@@ -186,24 +251,9 @@ $unpaidInvoices = array_values(array_filter($completedInvoices, fn($req) => $req
             margin-bottom: 0.75rem;
         }
 
-        .invoice-title {
-            font-size: 0.95rem;
-            font-weight: 700;
-            margin-bottom: 0.25rem;
-        }
-
-        .invoice-meta {
-            font-size: 0.8rem;
-            color: var(--muted);
-            line-height: 1.5;
-        }
-
-        .invoice-amount {
-            font-size: 1.15rem;
-            font-weight: 800;
-            color: var(--navy);
-            margin: 0.75rem 0 0.5rem;
-        }
+        .invoice-title { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.25rem; }
+        .invoice-meta { font-size: 0.8rem; color: var(--muted); line-height: 1.5; }
+        .invoice-amount { font-size: 1.15rem; font-weight: 800; color: var(--navy); margin: 0.75rem 0 0.5rem; }
 
         .invoice-actions {
             display: flex;
@@ -234,15 +284,8 @@ $unpaidInvoices = array_values(array_filter($completedInvoices, fn($req) => $req
             box-shadow: 0 4px 10px rgba(255,107,0,0.12);
         }
 
-        .btn-pay-method.mpesa {
-            background: #ecfdf5;
-            border-color: #bbf7d0;
-        }
-
-        .btn-pay-method.card {
-            background: #eff6ff;
-            border-color: #bfdbfe;
-        }
+        .btn-pay-method.mpesa { background: #ecfdf5; border-color: #bbf7d0; }
+        .btn-pay-method.card { background: #eff6ff; border-color: #bfdbfe; }
 
         .invoice-empty {
             background: var(--white);
@@ -253,38 +296,67 @@ $unpaidInvoices = array_values(array_filter($completedInvoices, fn($req) => $req
             font-size: 0.88rem;
         }
 
-        .payment-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.25rem; }
+        .method-note {
+            margin-top: 0.75rem;
+            font-size: 0.8rem;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        .payment-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1.25rem;
+        }
 
         .payment-card {
-            background: var(--white); border-radius: 14px; padding: 1.5rem;
+            background: var(--white);
+            border-radius: 14px;
+            padding: 1.5rem;
             box-shadow: 0 1px 4px rgba(0,0,0,0.07);
-            border-top: 4px solid transparent; transition: box-shadow 0.2s;
+            border-top: 4px solid transparent;
+            transition: box-shadow 0.2s;
         }
+
         .payment-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.1); }
-        .payment-card.mpesa  { border-top-color: #10b981; }
-        .payment-card.bank   { border-top-color: #f59e0b; }
-        .payment-card.cash   { border-top-color: #6366f1; }
+        .payment-card.mpesa { border-top-color: #10b981; }
+        .payment-card.bank { border-top-color: #f59e0b; }
+        .payment-card.cash { border-top-color: #6366f1; }
 
         .payment-icon { font-size: 2rem; margin-bottom: 0.75rem; }
         .payment-name { font-size: 1rem; font-weight: 700; margin-bottom: 0.4rem; }
         .payment-desc { font-size: 0.82rem; color: var(--muted); line-height: 1.6; }
 
         .btn-pay {
-            display: inline-block; margin-top: 1rem; padding: 0.5rem 1.2rem;
-            background: var(--navy); color: white; border: none; border-radius: 8px;
-            font-family: inherit; font-size: 0.82rem; font-weight: 600; cursor: pointer;
-            transition: all 0.2s; text-decoration: none;
+            display: inline-block;
+            margin-top: 1rem;
+            padding: 0.5rem 1.2rem;
+            background: var(--navy);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
         }
         .btn-pay:hover { background: #0f3460; }
-        .btn-pay.green  { background: #10b981; }
-        .btn-pay.amber  { background: #f59e0b; }
+        .btn-pay.green { background: #10b981; }
+        .btn-pay.amber { background: #f59e0b; }
         .btn-pay.violet { background: #6366f1; }
 
         .info-box {
-            background: #e0f2fe; border-radius: 10px; padding: 1rem 1.25rem;
-            font-size: 0.85rem; color: #0369a1; margin-top: 1.5rem;
+            background: #e0f2fe;
+            border-radius: 10px;
+            padding: 1rem 1.25rem;
+            font-size: 0.85rem;
+            color: #0369a1;
+            margin-top: 1.5rem;
             border-left: 4px solid #0ea5e9;
         }
+
         .info-box strong { display: block; margin-bottom: 4px; }
 
         @media (max-width: 768px) {
@@ -296,8 +368,6 @@ $unpaidInvoices = array_values(array_filter($completedInvoices, fn($req) => $req
     </style>
 </head>
 <body>
-
-<!-- SIDEBAR -->
 <aside class="sidebar">
     <a href="dashboard.php" class="sidebar-logo">
         <img src="../Images/logo.png" alt="FleetSimplify logo">
@@ -319,27 +389,25 @@ $unpaidInvoices = array_values(array_filter($completedInvoices, fn($req) => $req
             <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
             My Profile
         </a>
-        <a href="../chat/index.php" class="nav-item">
+        <a href="../chat/chat_ui.php" class="nav-item">
             <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
             Messages
         </a>
     </nav>
     <div class="sidebar-bottom">
-        <a href="../../logout.php" class="nav-item" style="color: #ef4444;">
+        <a href="../logout.php" class="nav-item" style="color: #ef4444;">
             <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
             Logout
         </a>
     </div>
 </aside>
 
-<!-- MAIN -->
 <main class="main">
     <div class="topbar">
         <span class="topbar-title">Payment Methods</span>
         <div class="avatar-sm"><?= strtoupper(substr($user_name, 0, 2)) ?></div>
     </div>
 
-    <!-- Profile Header -->
     <div class="profile-header">
         <div class="profile-cover"></div>
         <div class="profile-info-row">
@@ -361,13 +429,12 @@ $unpaidInvoices = array_values(array_filter($completedInvoices, fn($req) => $req
         </div>
     </div>
 
-    <!-- Content -->
     <div class="content-area">
         <div class="invoice-section">
             <div class="section-head">
                 <div>
                     <h3>Invoices & Payments</h3>
-                    <p>These are your completed requests waiting for payment. The amount is locked to the mechanic's invoice.</p>
+                    <p>Completed requests appear here with the mechanic contact for M-Pesa and a secure card checkout link.</p>
                 </div>
             </div>
 
@@ -405,46 +472,53 @@ $unpaidInvoices = array_values(array_filter($completedInvoices, fn($req) => $req
                                     <span class="badge badge-orange">Invoice pending</span>
                                 <?php endif; ?>
                             </div>
+
+                            <div class="method-note">
+                                <?php if (!empty($invoice['mechanic_phone'])): ?>
+                                    M-Pesa contact: <?= htmlspecialchars($invoice['mechanic_phone']) ?>
+                                <?php else: ?>
+                                    M-Pesa contact will appear once the mechanic profile has a phone number.
+                                <?php endif; ?>
+                                <br>
+                                Card payments are handled through secure checkout.
+                            </div>
                         </div>
                     <?php endforeach; ?>
                 </div>
             <?php else: ?>
-                <div class="invoice-empty">No completed invoices yet. Once a mechanic marks a task as Completed, the invoice will appear here with a Pay Now button.</div>
+                <div class="invoice-empty">No completed invoices yet. Once a mechanic marks a task as Completed, the invoice will appear here with Pay with M-Pesa and Pay with Card buttons.</div>
             <?php endif; ?>
         </div>
 
         <p class="page-title">Supported Payment Methods</p>
         <p style="font-size: 0.875rem; color: var(--muted); margin-bottom: 1.5rem;">
-            Use M-Pesa or Card through the secure checkout once your invoice is available.
+            Choose M-Pesa or Card from the invoice cards above to pay the correct amount securely.
         </p>
 
         <div class="payment-grid">
-            <!-- M-Pesa -->
             <div class="payment-card mpesa">
                 <div class="payment-icon">📱</div>
                 <div class="payment-name">M-Pesa</div>
                 <div class="payment-desc">
-                    Pay conveniently using M-Pesa. Go to M-Pesa Menu › Lipa na M-Pesa › Buy Goods and Services › Enter Till Number › Enter Amount.
+                    Use the mechanic's phone number shown on each invoice card to coordinate your M-Pesa payment, then confirm through checkout.
                 </div>
-                <button class="btn-pay green">Set as Default</button>
+                <button class="btn-pay green">View Invoice Contact</button>
             </div>
 
-            <!-- Bank Transfer -->
             <div class="payment-card bank">
                 <div class="payment-icon">🏦</div>
-                <div class="payment-name">Bank Transfer</div>
+                <div class="payment-name">Card</div>
                 <div class="payment-desc">
-                    You can still keep this as a fallback method, but invoices are paid through the secure checkout linked above.
+                    Card payments are handled securely in the checkout flow. No card number is stored on this page.
                 </div>
-                <button class="btn-pay amber">Set as Default</button>
+                <button class="btn-pay amber">Open Checkout</button>
             </div>
 
-            <!-- Cash -->
             <div class="payment-card cash">
                 <div class="payment-icon">💵</div>
                 <div class="payment-name">Cash</div>
                 <div class="payment-desc">
-                    Cash can be used directly with the mechanic, but the app now records the agreed invoice amount for completed jobs.
+                    Cash can still be settled directly with the mechanic if agreed offline, but the invoice remains visible here.
                 </div>
                 <button class="btn-pay violet">Set as Default</button>
             </div>
@@ -452,7 +526,7 @@ $unpaidInvoices = array_values(array_filter($completedInvoices, fn($req) => $req
 
         <div class="info-box">
             <strong>💡 Payment Tips</strong>
-            Payments are made directly to your mechanic. Always confirm the service cost before work begins. Nyamato does not handle payments directly — we simply connect you to verified mechanics.
+            For M-Pesa, use the mechanic phone number shown on the invoice card. For card, use the secure checkout opened from the invoice card.
         </div>
     </div>
 </main>

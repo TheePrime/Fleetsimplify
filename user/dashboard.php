@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once '../../backend/config/db.php';
+require_once '../config/db.php';
 
 // Protect route
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'user') {
@@ -582,14 +582,14 @@ $memberSince = isset($userData['created_at']) ? date('M Y', strtotime($userData[
             <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
             My Profile
         </a>
-        <a href="../chat/index.php" class="nav-item">
+        <a href="../chat/chat_ui.php" class="nav-item">
             <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
             Messages
         </a>
     </nav>
 
     <div class="sidebar-bottom">
-        <a href="../../backend/logout.php" class="nav-item" style="color: #ef4444;">
+        <a href="../logout.php" class="nav-item" style="color: #ef4444;">
             <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
             Logout
         </a>
@@ -685,7 +685,7 @@ $memberSince = isset($userData['created_at']) ? date('M Y', strtotime($userData[
                 }
                 ?>
 
-                <form action="../../backend/user/request_action.php" method="POST" id="requestForm">
+                <form action="request_action.php" method="POST" id="requestForm">
                     <input type="hidden" name="location_lat" id="location_lat">
                     <input type="hidden" name="location_lng" id="location_lng">
 
@@ -744,16 +744,6 @@ $memberSince = isset($userData['created_at']) ? date('M Y', strtotime($userData[
                         </div>
                         <div class="request-detail">📍 <?= htmlspecialchars($req['location_address']) ?></div>
                         <div class="request-detail">🔧 <?= htmlspecialchars(substr($req['problem_description'], 0, 60)) ?>...</div>
-                        <?php if($req['status'] === 'Completed'): ?>
-                            <div class="request-detail">
-                                💰 Amount to be paid:
-                                <?php if($req['agreed_amount'] !== null): ?>
-                                    <strong>KES <?= number_format((float)$req['agreed_amount'], 2) ?></strong>
-                                <?php else: ?>
-                                    <strong>Pending mechanic invoice</strong>
-                                <?php endif; ?>
-                            </div>
-                        <?php endif; ?>
                         <div class="request-time"><?= date('M d, Y h:i A', strtotime($req['created_at'])) ?></div>
                     </div>
                 <?php endforeach; ?>
@@ -790,16 +780,6 @@ $memberSince = isset($userData['created_at']) ? date('M Y', strtotime($userData[
                         </div>
                         <div class="request-detail">📍 <?= htmlspecialchars($req['location_address']) ?></div>
                         <div class="request-detail">🔧 <?= htmlspecialchars($req['problem_description']) ?></div>
-                        <?php if($req['status'] === 'Completed'): ?>
-                            <div class="request-detail">
-                                💰 Amount to be paid:
-                                <?php if($req['agreed_amount'] !== null): ?>
-                                    <strong>KES <?= number_format((float)$req['agreed_amount'], 2) ?></strong>
-                                <?php else: ?>
-                                    <strong>Pending mechanic invoice</strong>
-                                <?php endif; ?>
-                            </div>
-                        <?php endif; ?>
 
                         <?php if ($req['mechanic_name']): ?>
                             <div class="mechanic-box">
@@ -816,11 +796,6 @@ $memberSince = isset($userData['created_at']) ? date('M Y', strtotime($userData[
                             <div class="request-actions">
                                 <?php if ($req['status'] === 'Completed'): ?>
                                     <a href="rate.php?id=<?= $req['id'] ?>" class="btn btn-sm btn-success" style="text-decoration: none;">⭐ Rate Service</a>
-                                    <?php if (isset($req['payment_status']) && $req['payment_status'] === 'Unpaid'): ?>
-                                        <a href="pay_checkout.php?id=<?= $req['id'] ?>" class="btn btn-sm btn-warning" style="text-decoration: none;">💳 Pay Now</a>
-                                    <?php elseif (isset($req['payment_status']) && $req['payment_status'] === 'Paid'): ?>
-                                        <span class="status-badge" style="background:#d1fae5; color:#059669; padding: 0.35rem 0.75rem;">✅ Paid</span>
-                                    <?php endif; ?>
                                 <?php else: ?>
                                     <a href="track.php?id=<?= $req['id'] ?>" class="btn btn-sm btn-info" style="text-decoration: none;">📍 Track Mechanic</a>
                                 <?php endif; ?>

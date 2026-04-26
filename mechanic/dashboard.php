@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once '../../backend/config/db.php';
+require_once '../config/db.php';
 
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'mechanic') {
     header("Location: ../login.php");
@@ -595,14 +595,14 @@ $activeTab = $_GET['tab'] ?? 'requests';
             <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
             Business Profile
         </a>
-        <a href="../chat/index.php" class="nav-item">
+        <a href="../chat/chat_ui.php" class="nav-item">
             <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
             Messages
         </a>
     </nav>
 
     <div class="sidebar-bottom">
-        <a href="../../backend/logout.php" class="nav-item" style="color: #ef4444;">
+        <a href="../logout.php" class="nav-item" style="color: #ef4444;">
             <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
             Logout
         </a>
@@ -724,7 +724,7 @@ $activeTab = $_GET['tab'] ?? 'requests';
                             <div class="request-detail">📍 <?= htmlspecialchars($req['location_address']) ?></div>
                             <div class="request-detail">🔧 <?= htmlspecialchars($req['problem_description']) ?></div>
                             <div class="request-actions">
-                                <form action="../../backend/mechanic/accept_request.php" method="POST" style="margin:0;">
+                                <form action="accept_request.php" method="POST" style="margin:0;">
                                     <input type="hidden" name="request_id" value="<?= $req['id'] ?>">
                                     <button type="submit" class="btn btn-success">✅ Accept Job</button>
                                 </form>
@@ -763,7 +763,6 @@ $activeTab = $_GET['tab'] ?? 'requests';
                         <div class="request-detail">📍 <?= htmlspecialchars($task['location_address']) ?></div>
                         <div class="request-actions">
                             <a href="dashboard.php?tab=tasks" class="btn btn-sm btn-info" style="text-decoration:none;">Manage →</a>
-                            <a href="track.php?id=<?= $task['id'] ?>" class="btn btn-sm btn-orange" style="text-decoration:none;">📍 Track Location</a>
                             <a href="../chat/chat_ui.php?request_id=<?= $task['id'] ?>" class="btn btn-sm btn-gray" style="text-decoration:none;">💬 Chat</a>
                         </div>
                         <div class="request-time"><?= date('M d, Y h:i A', strtotime($task['created_at'])) ?></div>
@@ -806,48 +805,18 @@ $activeTab = $_GET['tab'] ?? 'requests';
 
                         <?php if($task['status'] !== 'Completed' && $task['status'] !== 'Cancelled'): ?>
                             <div class="request-actions">
-                                <form action="../../backend/mechanic/update_task.php" method="POST" class="task-update-form" style="margin:0; display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+                                <form action="update_task.php" method="POST" style="margin:0; display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
                                     <input type="hidden" name="request_id" value="<?= $task['id'] ?>">
-                                    <select name="status" class="status-select">
+                                    <select name="status">
                                         <option value="Accepted"    <?= $task['status'] == 'Accepted'    ? 'selected' : '' ?>>Accepted (On the way)</option>
                                         <option value="In Progress" <?= $task['status'] == 'In Progress' ? 'selected' : '' ?>>In Progress (Repairing)</option>
                                         <option value="Completed">Completed</option>
                                     </select>
-                                    <div class="amount-wrap" style="display:none; align-items:center; gap:0.35rem;">
-                                        <input
-                                            type="number"
-                                            name="agreed_amount"
-                                            class="amount-input"
-                                            min="1"
-                                            step="0.01"
-                                            placeholder="Amount (KES)"
-                                            style="min-width: 160px;"
-                                        >
-                                    </div>
                                     <button type="submit" class="btn btn-info">Update Status</button>
-                                    <a href="track.php?id=<?= $task['id'] ?>" class="btn btn-orange" style="text-decoration:none;">📍 Track / Share Location</a>
                                     <a href="../chat/chat_ui.php?request_id=<?= $task['id'] ?>" class="btn btn-gray" style="text-decoration:none;">💬 Chat</a>
                                 </form>
                             </div>
                         <?php else: ?>
-                            <?php if($task['status'] === 'Completed'): ?>
-                                <div class="request-detail">
-                                    💰 Amount Invoiced:
-                                    <?php if($task['agreed_amount'] !== null): ?>
-                                        <strong>KES <?= number_format((float)$task['agreed_amount'], 2) ?></strong>
-                                    <?php else: ?>
-                                        <strong>Not set</strong>
-                                    <?php endif; ?>
-                                </div>
-                                <div class="request-detail">
-                                    💳 Payment Status:
-                                    <?php if(($task['payment_status'] ?? 'Unpaid') === 'Paid'): ?>
-                                        <span style="color:#059669; font-weight:600;">Paid</span>
-                                    <?php else: ?>
-                                        <span style="color:#d97706; font-weight:600;">Unpaid</span>
-                                    <?php endif; ?>
-                                </div>
-                            <?php endif; ?>
                             <div class="request-actions">
                                 <a href="../chat/chat_ui.php?request_id=<?= $task['id'] ?>" class="btn btn-sm btn-gray" style="text-decoration:none;">💬 View Chat History</a>
                             </div>
@@ -916,32 +885,6 @@ $activeTab = $_GET['tab'] ?? 'requests';
     }
 
     setInterval(checkNewRequests, 5000);
-
-    // Completed status requires mechanic invoice amount
-    document.querySelectorAll('.task-update-form').forEach(form => {
-        const statusSelect = form.querySelector('.status-select');
-        const amountWrap = form.querySelector('.amount-wrap');
-        const amountInput = form.querySelector('.amount-input');
-
-        const toggleAmountInput = () => {
-            const needsAmount = statusSelect.value === 'Completed';
-            amountWrap.style.display = needsAmount ? 'flex' : 'none';
-            amountInput.required = needsAmount;
-            if (!needsAmount) amountInput.value = '';
-        };
-
-        statusSelect.addEventListener('change', toggleAmountInput);
-        form.addEventListener('submit', (e) => {
-            const needsAmount = statusSelect.value === 'Completed';
-            const amount = parseFloat(amountInput.value);
-            if (needsAmount && (!amountInput.value || Number.isNaN(amount) || amount <= 0)) {
-                e.preventDefault();
-                alert('Please enter a valid amount (KES) before completing this task.');
-            }
-        });
-
-        toggleAmountInput();
-    });
 </script>
 </body>
 </html>

@@ -13,11 +13,35 @@ $data = json_decode(file_get_contents('php://input'), true);
 
 $reference = $data['reference'] ?? null;
 $request_id = $data['request_id'] ?? null;
-$amount = $data['amount'] ?? null;
 $user_id = $_SESSION['user_id'];
 
-if (!$reference || !$request_id || !$amount) {
+if (!$reference || !$request_id) {
     echo json_encode(['status' => 'error', 'message' => 'Missing payment parameters']);
+    exit();
+}
+
+$stmtReq = $pdo->prepare("SELECT agreed_amount, payment_status, status FROM requests WHERE id = ? AND driver_id = ?");
+$stmtReq->execute([$request_id, $user_id]);
+$request = $stmtReq->fetch();
+
+if (!$request) {
+    echo json_encode(['status' => 'error', 'message' => 'Request not found']);
+    exit();
+}
+
+if ($request['status'] !== 'Completed') {
+    echo json_encode(['status' => 'error', 'message' => 'Payment is only allowed for completed requests']);
+    exit();
+}
+
+if ($request['payment_status'] === 'Paid') {
+    echo json_encode(['status' => 'error', 'message' => 'This request has already been paid']);
+    exit();
+}
+
+$expectedAmount = (float)($request['agreed_amount'] ?? 0);
+if ($expectedAmount <= 0) {
+    echo json_encode(['status' => 'error', 'message' => 'Invoice amount has not been set by the mechanic']);
     exit();
 }
 
@@ -29,17 +53,17 @@ if ($stmtCheck->fetch()) {
     exit();
 }
 
-// IMPORTANT: Replace this with your actual Paystack Secret Key
-$paystack_secret_key = "sk_test_YOUR_PAYSTACK_SECRET_KEY";
+// Pull Paystack key from environment. If missing, keep mock success for local testing.
+$paystack_secret_key = env_value('PAYSTACK_SECRET_KEY', '');
 
-// Mock verification for local testing if the key is still the placeholder
-if ($paystack_secret_key === "sk_test_YOUR_PAYSTACK_SECRET_KEY") {
+// Mock verification for local testing if the key is not configured.
+if (empty($paystack_secret_key)) {
     // MOCK SUCCESS
     try {
         $pdo->beginTransaction();
 
         $stmt = $pdo->prepare("INSERT INTO payments (user_id, request_id, amount, status, reference) VALUES (?, ?, ?, 'Success', ?)");
-        $stmt->execute([$user_id, $request_id, $amount, $reference]);
+        $stmt->execute([$user_id, $request_id, $expectedAmount, $reference]);
 
         $stmtUpd = $pdo->prepare("UPDATE requests SET payment_status = 'Paid' WHERE id = ? AND driver_id = ?");
         $stmtUpd->execute([$request_id, $user_id]);
@@ -89,9 +113,17 @@ if ($result['status'] && $result['data']['status'] === 'success') {
     // Verify the amount matches what we expect. 
     // Paystack returns amount in lowest denomination (e.g. kobo/cents). We passed KES cents.
     $paidAmount = $result['data']['amount'] / 100;
-    
-    // In a real system, you'd compare $paidAmount against the DB invoice amount. 
-    // Since the user inputted it, we just trust what Paystack verified they actually paid.
+
+    if (abs($paidAmount - $expectedAmount) > 0.01) {
+        try {
+            $stmt = $pdo->prepare("INSERT INTO payments (user_id, request_id, amount, status, reference) VALUES (?, ?, ?, 'Failed', ?)");
+            $stmt->execute([$user_id, $request_id, $paidAmount, $reference]);
+        } catch (PDOException $e) {
+            // ignore
+        }
+        echo json_encode(['status' => 'error', 'message' => 'Paid amount does not match the invoiced amount']);
+        exit();
+    }
     
     try {
         $pdo->beginTransaction();
@@ -112,7 +144,7 @@ if ($result['status'] && $result['data']['status'] === 'success') {
     // Transaction failed or pending
     try {
         $stmt = $pdo->prepare("INSERT INTO payments (user_id, request_id, amount, status, reference) VALUES (?, ?, ?, 'Failed', ?)");
-        $stmt->execute([$user_id, $request_id, $amount, $reference]);
+        $stmt->execute([$user_id, $request_id, $expectedAmount, $reference]);
     } catch (PDOException $e) {
         // ignore
     }
