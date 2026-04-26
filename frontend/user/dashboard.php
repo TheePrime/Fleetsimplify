@@ -796,6 +796,11 @@ $memberSince = isset($userData['created_at']) ? date('M Y', strtotime($userData[
                             <div class="request-actions">
                                 <?php if ($req['status'] === 'Completed'): ?>
                                     <a href="rate.php?id=<?= $req['id'] ?>" class="btn btn-sm btn-success" style="text-decoration: none;">⭐ Rate Service</a>
+                                    <?php if (isset($req['payment_status']) && $req['payment_status'] === 'Unpaid'): ?>
+                                        <a href="pay_checkout.php?id=<?= $req['id'] ?>" class="btn btn-sm btn-warning" style="text-decoration: none;">💳 Pay Now</a>
+                                    <?php elseif (isset($req['payment_status']) && $req['payment_status'] === 'Paid'): ?>
+                                        <span class="status-badge" style="background:#d1fae5; color:#059669; padding: 0.35rem 0.75rem;">✅ Paid</span>
+                                    <?php endif; ?>
                                 <?php else: ?>
                                     <a href="track.php?id=<?= $req['id'] ?>" class="btn btn-sm btn-info" style="text-decoration: none;">📍 Track Mechanic</a>
                                 <?php endif; ?>

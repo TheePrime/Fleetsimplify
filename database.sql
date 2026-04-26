@@ -62,6 +62,8 @@ CREATE TABLE `requests` (
   `location_address` varchar(255) DEFAULT NULL,
   `problem_description` text NOT NULL,
   `status` enum('Pending','Accepted','In Progress','Completed','Cancelled') NOT NULL DEFAULT 'Pending',
+  `agreed_amount` decimal(10,2) DEFAULT NULL,
+  `payment_status` enum('Unpaid','Paid') NOT NULL DEFAULT 'Unpaid',
   `created_at` timestamp DEFAULT current_timestamp(),
   `updated_at` timestamp DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   PRIMARY KEY (`id`),
@@ -97,6 +99,20 @@ CREATE TABLE `ratings` (
   FOREIGN KEY (`request_id`) REFERENCES `requests`(`id`) ON DELETE CASCADE,
   FOREIGN KEY (`driver_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
   FOREIGN KEY (`mechanic_id`) REFERENCES `mechanics`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Table structure for table `payments`
+CREATE TABLE `payments` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `request_id` int(11) NOT NULL,
+  `amount` decimal(10,2) NOT NULL,
+  `status` enum('Pending','Success','Failed') NOT NULL DEFAULT 'Pending',
+  `reference` varchar(100) NOT NULL UNIQUE,
+  `created_at` timestamp DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`request_id`) REFERENCES `requests`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Table structure for table `reports_data`
